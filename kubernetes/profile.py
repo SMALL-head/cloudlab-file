@@ -138,6 +138,23 @@ for i in range(len(hostnames)):
     #     node.addService(rspec.Execute(
     #         shell="bash", command="sudo %s 2>&1 | sudo tee /local/logs/setup.log" % script))
 
+    node.addService(rspec.Install(
+        url="https://github.com/SMALL-head/cloudlab-file/releases/download/test-v3/setup.tar.gz",
+        path="/local"
+    ))
+    node.addService(rspec.Execute(
+        shell="bash",
+        command=(
+            "sudo env "
+            f"MASTER_PREFIX={params.mName} "
+            f"WORKER_PREFIX={params.wName} "
+            "NFS_SERVER_IP=192.168.31.2 "
+            "NFS_EXPORT=/cluster-nfs "
+            "NFS_SUBNET=* "
+            "bash /local/setup.bash"
+        )
+    ))
+
     request.addResource(node)
 
     # Pre-boot execution: install baseline tools on each node
@@ -147,14 +164,14 @@ for i in range(len(hostnames)):
     # ))
 
     # Add two data-plane interfaces per node, one into each LAN with explicit IPs.
-    # LAN1 (10.10.0.0/24)
+    # LAN1 (192.168.31.0/24)
     iface1 = node.addInterface("if1")
-    iface1.addAddress(rspec.IPv4Address("10.10.0.%d" % (i + 2), "255.255.255.0"))
+    iface1.addAddress(rspec.IPv4Address("192.168.31.%d" % (i + 2), "255.255.255.0"))
     lan1.addInterface(iface1)
 
-    # LAN2 (10.20.0.0/24)
+    # LAN2 (192.169.31.0/24)
     iface2 = node.addInterface("if2")
-    iface2.addAddress(rspec.IPv4Address("10.20.0.%d" % (i + 2), "255.255.255.0"))
+    iface2.addAddress(rspec.IPv4Address("192.169.31.%d" % (i + 2), "255.255.255.0"))
     lan2.addInterface(iface2)
 
 # Add the LANs to the request.
